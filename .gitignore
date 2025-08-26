@@ -10,3 +10,5 @@ htmlcov/
 docs/_build/
 .env
 bin
+# Ignore ffmpeg
+ffmpeg.exe
