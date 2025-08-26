@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts Dashboard | Smart Dashboard</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Configure Tailwind theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            light: '#60a5fa',
+                            DEFAULT: '#3b82f6',
+                            dark: '#2563eb',
+                        },
+                        secondary: {
+                            light: '#a78bfa',
+                            DEFAULT: '#8b5cf6',
+                            dark: '#7c3aed',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #3b82f6, #7c3aed);
+            }
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+            .card-shadow-hover {
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-gradient-primary shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-20">
+                <a href="#" class="text-white font-bold text-2xl flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="6"></circle>
+                        <circle cx="12" cy="12" r="2"></circle>
+                    </svg>
+                    Smart Dashboard
+                </a>
+                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-200 transition-colors">
+                    <div class="flex items-center text-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back to Dashboard
+                    </div>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-gray-800">Captured Alerts</h1>
+                <p class="text-gray-500 mt-2 text-xl">History of all detected faces</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-grow">
+                        <label for="filter" class="block text-lg font-medium text-gray-700 mb-2">Filter by</label>
+                        <select id="filter" class="w-full rounded-lg border border-gray-300 py-3 px-4 text-lg text-gray-700">
+                            <option value="all">All Alerts</option>
+                            <option value="familiar">Familiar Faces</option>
+                            <option value="unfamiliar">Unknown Faces</option>
+                        </select>
+                    </div>
+                    <div class="flex-grow">
+                        <label for="date" class="block text-lg font-medium text-gray-700 mb-2">Date Range</label>
+                        <input type="date" id="date" class="w-full rounded-lg border border-gray-300 py-3 px-4 text-lg text-gray-700">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="resetFilters()" class="bg-gradient-primary text-white rounded-lg py-3 px-6 text-lg font-medium hover:opacity-90 transition-opacity">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="alerts-grid">
+                {% for alert in alerts %}
+                <div class="alert-card bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 transform hover:-translate-y-2 hover:card-shadow-hover"
+                     data-type="{{ alert.type }}" data-date="{{ alert.timestamp.strftime('%Y-%m-%d') }}">
+                    <div class="relative">
+                        <img src="data:image/jpeg;base64,{{ alert.image|b64encode }}" class="w-full h-64 object-cover" alt="Face">
+                        <div class="absolute top-4 right-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium {{ 'bg-green-100 text-green-800' if alert.type == 'familiar' else 'bg-red-100 text-red-800' }}">
+                                {{ alert.type.capitalize() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ alert.name }}</h3>
+                        <div class="flex items-center text-gray-500 text-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            {{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button class="text-primary hover:text-primary-dark transition-colors text-base font-medium flex items-center">
+                                View Details
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14"></path>
+                                    <path d="M12 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-full bg-white rounded-xl shadow-lg p-8 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <h3 class="text-2xl font-medium text-gray-700 mb-2">No alerts captured yet</h3>
+                    <p class="text-gray-500 text-lg">Alerts will appear here once faces are detected by the system.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-10 flex justify-center">
+                <nav class="inline-flex rounded-md shadow-sm" aria-label="Pagination">
+                    {% if alerts.has_prev %}
+                        <a href="{{ url_for('alerts', page=alerts.prev_num) }}" class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-lg font-medium text-gray-500 hover:bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </a>
+                    {% else %}
+                        <span class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-lg font-medium text-gray-400 cursor-not-allowed">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </span>
+                    {% endif %}
+
+                    {% for p in alerts.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if p %}
+                            {% if p == alerts.page %}
+                                <a href="{{ url_for('alerts', page=p) }}" aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-primary bg-primary text-lg font-medium text-white">
+                                    {{ p }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('alerts', page=p) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-lg font-medium text-gray-500 hover:bg-gray-50">
+                                    {{ p }}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-lg font-medium text-gray-500">
+                                …
+                            </span>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if alerts.has_next %}
+                        <a href="{{ url_for('alerts', page=alerts.next_num) }}" class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-lg font-medium text-gray-500 hover:bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </a>
+                    {% else %}
+                        <span class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-lg font-medium text-gray-400 cursor-not-allowed">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </span>
+                    {% endif %}
+                </nav>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="text-center text-gray-500 text-base">
+                <p>© 2023 Smart Dashboard. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Filtering -->
+    <script>
+        const filterSelect = document.getElementById('filter');
+        const dateInput = document.getElementById('date');
+        const alertCards = document.querySelectorAll('.alert-card');
+
+        function applyFilters() {
+            const selectedFilter = filterSelect.value;
+            const selectedDate = dateInput.value;
+
+            alertCards.forEach(card => {
+                const alertType = card.getAttribute('data-type');
+                const alertDate = card.getAttribute('data-date');
+
+                let typeMatch = (selectedFilter === 'all') || (alertType === selectedFilter);
+                let dateMatch = (!selectedDate) || (alertDate === selectedDate);
+
+                if (typeMatch && dateMatch) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function resetFilters() {
+            filterSelect.value = 'all';
+            dateInput.value = '';
+            applyFilters();
+        }
+
+        filterSelect.addEventListener('change', applyFilters);
+        dateInput.addEventListener('change', applyFilters);
+    </script>
+</body>
+</html>
